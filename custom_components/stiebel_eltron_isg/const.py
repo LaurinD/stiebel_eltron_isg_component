@@ -1,4 +1,5 @@
 """Constants for stiebel_eltron_isg."""
+#LaurinEdir
 
 from homeassistant.const import Platform
 
@@ -24,6 +25,8 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.CLIMATE,
 ]
+
+
 
 ACTUAL_TEMPERATURE = "actual_temperature"
 TARGET_TEMPERATURE = "target_temperature"
@@ -120,6 +123,18 @@ COMPRESSOR_HEATING_WATER = "compressor_heating_water"
 ELECTRICAL_BOOSTER_HEATING = "electrical_booster_heating"
 ELECTRICAL_BOOSTER_HEATING_WATER = "electrical_booster_heating_water"
 
+ACTUAL_CONSUMING_WATER_HEATING = "actual_consuming_water_heating"
+ACTUAL_CONSUMING_HEATING = "actual_consuming_heating"
+EMI_IS_ACTIVE = "emi_is_active"
+EMI_MODE_HZ = "emi_mode_hz"
+EMI_MODE_WW = "emi_mode_ww"
+
+FIXED_TEMP = "fixed_temp"
+FIXED_POWER = "fixed_power"
+
+
+
+
 
 IS_HEATING = "is_heating"
 IS_HEATING_WATER = "is_heating_water"
@@ -129,6 +144,7 @@ PUMP_ON_HK1 = "pump_on_hk1"
 PUMP_ON_HK2 = "pump_on_hk2"
 COMPRESSOR_ON = "compressor_on"
 CIRCULATION_PUMP = "circulation_pump"
+
 
 HEATING_CIRCUIT_1_PUMP = "heating_circuit_1_pump"
 HEATING_CIRCUIT_2_PUMP = "heating_circuit_2_pump"
@@ -191,12 +207,17 @@ HEATING_CURVE_RISE_HK1 = "heating_curve_rise_hk1"
 COMFORT_TEMPERATURE_TARGET_HK2 = "comfort_temperature_target_hk2"
 ECO_TEMPERATURE_TARGET_HK2 = "eco_temperature_target_hk2"
 HEATING_CURVE_RISE_HK2 = "heating_curve_rise_hk2"
+COMFORT_TEMPERATURE_TARGET_HK3 = "comfort_temperature_target_hk3"
+ECO_TEMPERATURE_TARGET_HK3 = "eco_temperature_target_hk3"
+HEATING_CURVE_RISE_HK3 = "heating_curve_rise_hk3"
 DUALMODE_TEMPERATURE_HZG = "dualmode_temperature_hzg"
 
 COMFORT_COOLING_TEMPERATURE_TARGET_HK1 = "comfort_cooling_temperature_target_hk1"
 ECO_COOLING_TEMPERATURE_TARGET_HK1 = "eco_cooling_temperature_target_hk1"
 COMFORT_COOLING_TEMPERATURE_TARGET_HK2 = "comfort_cooling_temperature_target_hk2"
 ECO_COOLING_TEMPERATURE_TARGET_HK2 = "eco_cooling_temperature_target_hk2"
+COMFORT_COOLING_TEMPERATURE_TARGET_HK3 = "comfort_cooling_temperature_target_hk3"
+ECO_COOLING_TEMPERATURE_TARGET_HK3 = "eco_cooling_temperature_target_hk3"
 
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
