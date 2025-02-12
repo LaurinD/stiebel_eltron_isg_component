@@ -1,5 +1,5 @@
 """Data Coordinator for the WPM Stiebel Eltron heat pumps.
-
+#Laurin Edit
 For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
@@ -32,6 +32,8 @@ from .const import (
     ACTUAL_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_HK3,
     ACTUAL_TEMPERATURE_WATER,
+    ACTUAL_CONSUMING_WATER_HEATING,
+    ACTUAL_CONSUMING_HEATING,
     AREA_COOLING_TARGET_FLOW_TEMPERATURE,
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     BUFFER_1_CHARGING_PUMP,
@@ -43,6 +45,7 @@ from .const import (
     CIRCULATION_PUMP,
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_WATER_TEMPERATURE_TARGET,
     COMPRESSOR_ON,
     CONSUMED_HEATING,
@@ -63,7 +66,11 @@ from .const import (
     DUALMODE_TEMPERATURE_WW,
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK3,
     ECO_WATER_TEMPERATURE_TARGET,
+    EMI_IS_ACTIVE,
+    EMI_MODE_HZ,
+    EMI_MODE_WW,
     EMERGENCY_HEATING_1,
     EMERGENCY_HEATING_1_2,
     EMERGENCY_HEATING_2,
@@ -71,6 +78,8 @@ from .const import (
     EVAPORATOR_DEFROST,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
+    FIXED_TEMP,
+    FIXED_POWER,
     FLOW_TEMPERATURE,
     FLOW_TEMPERATURE_NHZ,
     FLOW_TEMPERATURE_WP1,
@@ -90,6 +99,7 @@ from .const import (
     HEATING_CIRCUIT_5_PUMP,
     HEATING_CURVE_RISE_HK1,
     HEATING_CURVE_RISE_HK2,
+    HEATING_CURVE_RISE_HK3,
     HIGH_PRESSURE,
     HIGH_PRESSURE_WP1,
     HIGH_PRESSURE_WP2,
@@ -100,6 +110,7 @@ from .const import (
     IS_HEATING,
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
+    EMI_IS_ACTIVE,                  #
     LOW_PRESSURE,
     LOW_PRESSURE_WP1,
     LOW_PRESSURE_WP2,
@@ -235,9 +246,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 2516
             decoder.skip_bytes(2)
             # 2517
-            circulation_pump = decoder.decode_16bit_uint()
-            if circulation_pump != 32768:
-                result[CIRCULATION_PUMP] = circulation_pump
+            decoder.skip_bytes(2)
             # 2518
             second_generator_dhw = decoder.decode_16bit_uint()
             if second_generator_dhw != 32768:
@@ -365,7 +374,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = await self.read_input_registers(slave=1, address=500, count=111)
+        inverter_data = await self.read_input_registers(slave=1, address=500, count=112)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers,
@@ -604,12 +613,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 596-599 TEMPERATURE_HK4
             # 600-603 TEMPERATURE_HK5
             # 604-608 COOLING CIRCUIT TEMPERATURE_HK1 to HK5
-            decoder.skip_bytes(26)
-            # 609
+            decoder.skip_bytes(28)
+            # 610
             result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
-            # 610
+            # 611
             result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
@@ -622,7 +631,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_holding_registers(
             slave=1,
             address=1500,
-            count=19,
+            count=57,
         )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -699,6 +708,33 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
+            decoder.skip_bytes(62)
+            # 1550
+            result[COMFORT_TEMPERATURE_TARGET_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 1551
+            result[ECO_TEMPERATURE_TARGET_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 1552
+            result[HEATING_CURVE_RISE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+                100,
+            )
+            # 1553
+            result[FIXED_POWER] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+                0.01,
+            )
+            # 1554
+            result[FIXED_TEMP] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 1555
+            circulation_pump = decoder.decode_16bit_uint()
+            if circulation_pump != 32768:
+                result[CIRCULATION_PUMP] = circulation_pump
             result["system_paramaters"] = list(inverter_data.registers)
         return result
 
@@ -707,8 +743,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         result = {}
         inverter_data = await self.read_input_registers(
             slave=1,
-            address=3500,
-            count=22,
+            address=3685,
+            count=27,
         )  # count=180
         _LOGGER.debug(f"Energy Data: {inverter_data.registers}")
         if not inverter_data.isError():
@@ -716,35 +752,63 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers,
                 byteorder=Endian.BIG,
             )
-            produced_heating_today = decoder.decode_16bit_uint()
+            
+            produced_heating_today_low = decoder.decode_16bit_uint()
+            produced_heating_today_high = decoder.decode_16bit_uint()
+            produced_heating_today= (
+                produced_heating_today_high + produced_heating_today_low / 1000
+            )
             produced_heating_total_low = decoder.decode_16bit_uint()
             produced_heating_total_high = decoder.decode_16bit_uint()
             produced_heating_total = (
                 produced_heating_total_high * 1000 + produced_heating_total_low
             )
 
-            produced_water_today = decoder.decode_16bit_uint()
+            produced_water_today_low = decoder.decode_16bit_uint()
+            produced_water_today_high = decoder.decode_16bit_uint()
+            produced_water_today =  (
+                produced_water_today_high + produced_water_today_low / 1000
+            )
+            
+            
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
             produced_water_total = (
                 produced_water_total_high * 1000 + produced_water_total_low
             )
 
-            decoder.skip_bytes(8)  # Skip NHZ
+            decoder.skip_bytes(12)  # Skip NHZ
 
-            consumed_heating_today = decoder.decode_16bit_uint()
+            consumed_heating_today_low = decoder.decode_16bit_uint()
+            consumed_heating_today_high = decoder.decode_16bit_uint()
+            consumed_heating_today = (
+                consumed_heating_today_high + consumed_heating_today_low / 1000
+            )
+            
             consumed_heating_total_low = decoder.decode_16bit_uint()
             consumed_heating_total_high = decoder.decode_16bit_uint()
             consumed_heating_total = (
                 consumed_heating_total_high * 1000 + consumed_heating_total_low
             )
 
-            consumed_water_today = decoder.decode_16bit_uint()
+            consumed_water_today_low = decoder.decode_16bit_uint()
+            consumed_water_today_high = decoder.decode_16bit_uint()
+            consumed_water_today = (
+                consumed_water_today_high + consumed_water_today_low / 1000
+            )
+            
             consumed_water_total_low = decoder.decode_16bit_uint()
             consumed_water_total_high = decoder.decode_16bit_uint()
             consumed_water_total = (
                 consumed_water_total_high * 1000 + consumed_water_total_low
             )
+            result[ACTUAL_CONSUMING_WATER_HEATING] = decoder.decode_16bit_uint()/100
+            result[ACTUAL_CONSUMING_HEATING] = decoder.decode_16bit_uint()*100
+            result[EMI_IS_ACTIVE] = decoder.decode_16bit_uint()
+            result[EMI_MODE_HZ] = decoder.decode_16bit_uint()
+            result[EMI_MODE_WW] = decoder.decode_16bit_uint()
+  
+            
 
             result[PRODUCED_HEATING_TODAY] = produced_heating_today
             result[PRODUCED_HEATING_TOTAL] = produced_heating_total
@@ -850,6 +914,16 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             await self.write_register(address=1505, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK2:
             await self.write_register(address=1506, value=int(value * 100), slave=1)
+        elif key == COMFORT_TEMPERATURE_TARGET_HK3:
+            await self.write_register(address=1550, value=int(value * 10), slave=1)
+        elif key == ECO_TEMPERATURE_TARGET_HK3:
+            await self.write_register(address=1551, value=int(value * 10), slave=1)  
+        elif key == HEATING_CURVE_RISE_HK3:
+            await self.write_register(address=1552, value=int(value * 100), slave=1)  
+        elif key == FIXED_POWER:
+            await self.write_register(address=1553, value=int(value / 100), slave=1)    
+        elif key == FIXED_TEMP:
+            await self.write_register(address=1554, value=int(value * 10), slave=1)                
         elif key == DUALMODE_TEMPERATURE_HZG:
             await self.write_register(address=1508, value=int(value * 10), slave=1)
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:
@@ -867,7 +941,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         elif key == FAN_COOLING_TARGET_ROOM_TEMPERATURE:
             await self.write_register(address=1518, value=int(value * 10), slave=1)
         elif key == CIRCULATION_PUMP:
-            await self.write_register(address=47012, value=value, slave=1)
+            await self.write_register(address=1555, value=value, slave=1)
         else:
             return
         self.data[key] = value
