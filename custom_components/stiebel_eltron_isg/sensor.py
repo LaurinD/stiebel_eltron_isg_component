@@ -1,5 +1,5 @@
 """Sensor platform for stiebel_eltron_isg."""
-
+#LaurinEdit
 import datetime
 import logging
 
@@ -14,6 +14,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
@@ -44,6 +45,8 @@ from .const import (
     ACTUAL_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_HK3,
     ACTUAL_TEMPERATURE_WATER,
+    ACTUAL_CONSUMING_WATER_HEATING,
+    ACTUAL_CONSUMING_HEATING,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_STARTS,
@@ -58,6 +61,9 @@ from .const import (
     DEWPOINT_TEMPERATURE_HK2,
     DEWPOINT_TEMPERATURE_HK3,
     DOMAIN,
+    EMI_IS_ACTIVE,
+    EMI_MODE_HZ,
+    EMI_MODE_WW,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
@@ -188,6 +194,18 @@ def create_volume_stream_entity_description(name, key):
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
+    
+def create_power_entity_description(name, key):
+    """Create an entry description for a humidity sensor."""
+    return SensorEntityDescription(
+        key,
+        name=name,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        icon="mdi:meter-electric",
+        state_class=SensorStateClass.MEASUREMENT,
+        has_entity_name=True,
+    )    
+    
 
 
 SYSTEM_VALUES_SENSOR_TYPES = [
@@ -352,6 +370,24 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
         icon="mdi:solar-power",
         has_entity_name=True,
     ),
+    SensorEntityDescription(
+        EMI_IS_ACTIVE,
+        name="EMI_is Activ",
+        icon="mdi:solar-power",
+        has_entity_name=True,
+    ),
+    SensorEntityDescription(
+        EMI_MODE_HZ,
+        name="EMI_mode_HZ",
+        icon="mdi:solar-power",
+        has_entity_name=True,
+    ),
+    SensorEntityDescription(
+        EMI_MODE_WW,
+        name="EMI_mode_WW",
+        icon="mdi:solar-power",
+        has_entity_name=True,
+    ),
 ]
 
 
@@ -404,6 +440,12 @@ ENERGY_DAILY_SENSOR_TYPES = [
         "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
     ),
+]
+
+
+POWER_SENSOR_TYPES = [
+    create_power_entity_description("Actual_Consuming_Water_Heating", ACTUAL_CONSUMING_WATER_HEATING,),
+    create_power_entity_description("Actual_Consuming_Heating", ACTUAL_CONSUMING_HEATING,),
 ]
 
 
@@ -504,13 +546,21 @@ async def async_setup_entry(
         )
         entities.append(sensor)
 
-    for description in ENERGYMANAGEMENT_SENSOR_TYPES:
+    for description in POWER_SENSOR_TYPES:
         sensor = StiebelEltronISGSensor(
             coordinator,
             entry,
             description,
         )
         entities.append(sensor)
+        
+    for description in ENERGYMANAGEMENT_SENSOR_TYPES:
+        sensor = StiebelEltronISGSensor(
+            coordinator,
+            entry,
+            description,
+        )
+        entities.append(sensor)    
 
     for description in ENERGY_SENSOR_TYPES:
         sensor = StiebelEltronISGSensor(
