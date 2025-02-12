@@ -1,5 +1,5 @@
 """Sensor number for stiebel_eltron_isg."""
-
+#Laurin Edit
 import logging
 
 from homeassistant.components.number import (
@@ -8,6 +8,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import (
     UnitOfTemperature,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,23 +18,30 @@ from .const import (
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
     COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
+    COMFORT_COOLING_TEMPERATURE_TARGET_HK3,
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_WATER_TEMPERATURE_TARGET,
     DOMAIN,
     DUALMODE_TEMPERATURE_HZG,
     DUALMODE_TEMPERATURE_WW,
     ECO_COOLING_TEMPERATURE_TARGET_HK1,
     ECO_COOLING_TEMPERATURE_TARGET_HK2,
+    ECO_COOLING_TEMPERATURE_TARGET_HK3,
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK3,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
+    FIXED_TEMP,
+    FIXED_POWER,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
     HEATING_CURVE_RISE_HK1,
     HEATING_CURVE_RISE_HK2,
+    HEATING_CURVE_RISE_HK3,
 )
 from .data import StiebelEltronISGIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
@@ -76,6 +84,26 @@ NUMBER_TYPES_ALL = [
         ECO_TEMPERATURE_TARGET_HK2,
         has_entity_name=True,
         name="Eco Temperature Target HK2",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer-low",
+        native_min_value=5,
+        native_max_value=30,
+        native_step=0.1,
+    ),
+     NumberEntityDescription(
+        COMFORT_TEMPERATURE_TARGET_HK3,
+        has_entity_name=True,
+        name="Comfort Temperature Target HK3",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer-high",
+        native_min_value=5,
+        native_max_value=30,
+        native_step=0.1,
+    ),
+    NumberEntityDescription(
+        ECO_TEMPERATURE_TARGET_HK3,
+        has_entity_name=True,
+        name="Eco Temperature Target HK3",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=5,
@@ -183,7 +211,39 @@ NUMBER_TYPES_WPM = [
         native_max_value=3,
         native_step=0.01,
     ),
+    NumberEntityDescription(
+        HEATING_CURVE_RISE_HK3,
+        has_entity_name=True,
+        name="Heating Curve Rise HK3",
+        icon="mdi:thermometer-chevron-up",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=0.01,
+    ),
+    NumberEntityDescription(
+        FIXED_TEMP,
+        has_entity_name=True,
+        name="Fixed Temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer-check",
+        native_min_value=20,
+        native_max_value=368650,
+        #native_step=1,
+    ),
+    NumberEntityDescription(
+        FIXED_POWER,
+        has_entity_name=True,
+        name="Fixed Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        icon="mdi:thermometer-check",
+        native_min_value=5000,
+        native_max_value=15000,
+        native_step=100,
+    ),
 ]
+
+
+
 
 
 NUMBER_TYPES_LWZ = [
@@ -239,6 +299,26 @@ NUMBER_TYPES_LWZ = [
         ECO_COOLING_TEMPERATURE_TARGET_HK2,
         has_entity_name=True,
         name="Eco Cooling Temperature Target HK2",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:snowflake-thermometer",
+        native_min_value=10,
+        native_max_value=30,
+        native_step=0.1,
+    ),
+    NumberEntityDescription(
+        COMFORT_COOLING_TEMPERATURE_TARGET_HK3,
+        has_entity_name=True,
+        name="Comfort Cooling Temperature Target HK3",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:snowflake-thermometer",
+        native_min_value=10,
+        native_max_value=30,
+        native_step=0.1,
+    ),
+    NumberEntityDescription(
+        ECO_COOLING_TEMPERATURE_TARGET_HK3,
+        has_entity_name=True,
+        name="Eco Cooling Temperature Target HK3",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:snowflake-thermometer",
         native_min_value=10,
